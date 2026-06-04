@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -18,13 +17,24 @@ class App {
   }
 
   _initMiddleware() {
-this.app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    process.env.FRONTEND_URL
-  ],
-  credentials: true
-}));
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      process.env.FRONTEND_URL,
+    ].filter(Boolean);
+
+    this.app.use(
+      cors({
+        origin: function (origin, callback) {
+          // allow requests with no origin (Postman, Railway health checks, curl)
+          if (!origin) return callback(null, true);
+          if (allowedOrigins.includes(origin)) return callback(null, true);
+          return callback(new Error(`CORS blocked for origin: ${origin}`));
+        },
+        credentials: true,
+      })
+    );
+
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan("dev"));
@@ -32,7 +42,11 @@ this.app.use(cors({
 
   _initRoutes() {
     this.app.get("/api/health", (req, res) =>
-      res.json({ success: true, message: "Parking Management API is running", timestamp: new Date() })
+      res.json({
+        success: true,
+        message: "Parking Management API is running",
+        timestamp: new Date(),
+      })
     );
     this.app.use("/api/floors", floorRoutes);
     this.app.use("/api/vehicle-types", vehicleTypeRoutes);

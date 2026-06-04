@@ -8,10 +8,7 @@ class Database {
   async connect(uri) {
     if (this._connection) return this._connection;
     try {
-      this._connection = await mongoose.connect(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      this._connection = await mongoose.connect(uri);
       console.log(`[DB] MongoDB connected: ${mongoose.connection.host}`);
       return this._connection;
     } catch (error) {
